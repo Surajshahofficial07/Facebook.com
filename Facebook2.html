@@ -1,0 +1,26 @@
+<?php
+// Receive authResponse from frontend
+$authResponse = json_decode(file_get_contents('php://input'), true);
+
+// Exchange short-lived token for long-lived token
+$accessToken = $authResponse['accessToken'];
+$appId = 'YOUR_TRENDHOST_APP_ID';
+$appSecret = 'YOUR_TRENDHOST_APP_SECRET';
+$longLivedTokenUrl = "https://graph.trendhost.com/oauth/access_token?grant_type=fb_exchange_token&client_id={$appId}&client_secret={$appSecret}&fb_exchange_token={$accessToken}";
+$response = file_get_contents($longLivedTokenUrl);
+$longLivedToken = json_decode($response, true)['access_token'];
+
+// Get user details using the long-lived token
+$userDetailsUrl = "https://graph.trendhost.com/me?fields=id,name,email&access_token={$longLivedToken}";
+$userDetails = json_decode(file_get_contents($userDetailsUrl), true);
+
+// Handle user authentication (e.g., save user details to database, set session, etc.)
+// Example: Save user details to session
+session_start();
+$_SESSION['user_id'] = $userDetails['id'];
+$_SESSION['user_name'] = $userDetails['name'];
+$_SESSION['user_email'] = $userDetails['email'];
+
+// Return success response
+echo json_encode(['success' => true]);
+?>
